@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Analysis Results — Secure Cloud Log Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body { background: #0d1117; color: #c9d1d9; }
+    .card { background: #161b22; border: 1px solid #30363d; color: #c9d1d9; }
+    .card-header { background: #21262d; font-weight: bold; }
+    .badge-mr { background: #1f6feb; font-size: .85rem; }
+    .table { color: #c9d1d9; }
+    .table-dark { --bs-table-bg: #161b22; }
+    .alert-info { background: #1f3a5f; color: #c9d1d9; border-color: #1f6feb; }
+    .nav-link { color: #8b949e; }
+    .nav-link:hover { color: #c9d1d9; }
+    .progress { background: #21262d; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:#161b22;border-bottom:1px solid #30363d;">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="{{ url_for('index') }}">☁ Cloud Log Analyzer</a>
+    <div>
+      {% if current_user %}<span class="text-secondary me-3">👤 {{ current_user }}</span>{% endif %}
+      <a class="btn btn-sm btn-outline-secondary me-2" href="{{ url_for('index') }}">← Upload New</a>
+      <a class="btn btn-sm btn-outline-danger" href="{{ url_for('logout') }}">Logout</a>
+    </div>
+  </div>
+</nav>
+
+<div class="container py-4">
+  <h3 class="mb-1">Analysis Results</h3>
+  <p class="text-secondary mb-4">File: <strong>{{ filename }}</strong></p>
+
+  <!-- MapReduce Stats Banner -->
+  <div class="alert alert-info mb-4">
+    <strong>⚡ MapReduce Engine</strong> — processed
+    <span class="badge badge-mr">{{ mr.total_entries }}</span> entries across
+    <span class="badge badge-mr">{{ mr.chunk_count }}</span> parallel chunks.
+    Pipeline: Split → Map → Shuffle → Reduce.
+  </div>
+
+  <div class="row g-4">
+    <!-- HTTP Errors (from MapReduce) -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">🔴 HTTP Error Codes (MapReduce)</div>
+        <div class="card-body">
+          {% if mr.http_errors %}
+            <table class="table table-dark table-sm">
+              <thead><tr><th>Code</th><th>Count</th></tr></thead>
+              <tbody>
+                {% for code, cnt in mr.http_errors.items() %}
+                  <tr><td>{{ code }}</td><td><span class="badge bg-danger">{{ cnt }}</span></td></tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% else %}
+            <p class="text-secondary">No HTTP error codes detected.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Busiest Hours (from MapReduce) -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">⏰ Busiest Traffic Hours (MapReduce)</div>
+        <div class="card-body">
+          {% if mr.busiest_hours %}
+            {% for hour, cnt in mr.busiest_hours %}
+              <div class="mb-2">
+                <span class="small">Hour {{ hour }}:00</span>
+                <div class="progress mt-1" style="height:18px;">
+                  <div class="progress-bar bg-info" style="width:{{ [cnt*10,100]|min }}%">{{ cnt }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-secondary">No timestamp data found.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Suspicious Events -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">⚠️ Suspicious Events</div>
+        <div class="card-body">
+          {% if analysis.suspicious_events %}
+            {% for ev in analysis.suspicious_events[:5] %}
+              <div class="border border-warning rounded p-2 mb-2 small">
+                <strong>{{ ev.event }}</strong> — {{ ev.user }}<br>
+                <span class="text-secondary">{{ ev.reasons|join(', ') }}</span>
+              </div>
+            {% endfor %}
+          {% else %}
+            <p class="text-secondary">No suspicious events flagged.</p>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Risk Score -->
+    <div class="col-md-6">
+      <div class="card h-100">
+        <div class="card-header">🛡 Risk Score</div>
+        <div class="card-body text-center">
+          <div style="font-size:3rem;font-weight:bold;color:{% if analysis.risk_score > 70 %}#f85149{% elif analysis.risk_score > 40 %}#d29922{% else %}#3fb950{% endif %};">
+            {{ analysis.risk_score }}/100
+          </div>
+          <p class="text-secondary mt-2">Based on {{ analysis.total_events }} events</p>
+          <p>Providers: {{ mr.providers }}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top Users -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">👤 Top Users</div>
+        <div class="card-body">
+          <table class="table table-dark table-sm">
+            <thead><tr><th>User</th><th>Count</th></tr></thead>
+            <tbody>
+              {% for user, cnt in analysis.top_users %}
+                <tr><td>{{ user }}</td><td>{{ cnt }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Top IPs -->
+    <div class="col-md-6">
+      <div class="card">
+        <div class="card-header">🌐 Top IP Addresses</div>
+        <div class="card-body">
+          <table class="table table-dark table-sm">
+            <thead><tr><th>IP</th><th>Count</th></tr></thead>
+            <tbody>
+              {% for ip, cnt in analysis.top_ips %}
+                <tr><td>{{ ip }}</td><td>{{ cnt }}</td></tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

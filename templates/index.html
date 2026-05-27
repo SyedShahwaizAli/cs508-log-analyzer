@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Secure Cloud Log Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <style>
+    body { background: #0d1117; color: #c9d1d9; }
+    .card { background: #161b22; border: 1px solid #30363d; color: #c9d1d9; }
+    .card-header { background: #21262d; }
+    .form-control { background: #0d1117; border-color: #30363d; color: #c9d1d9; }
+    .form-control:focus { background: #0d1117; color: #c9d1d9; border-color: #1f6feb; }
+    .btn-primary { background: #1f6feb; border: none; }
+    .table { color: #c9d1d9; }
+    .table-dark { --bs-table-bg: #161b22; }
+  </style>
+</head>
+<body>
+<nav class="navbar navbar-dark" style="background:#161b22;border-bottom:1px solid #30363d;">
+  <div class="container">
+    <a class="navbar-brand fw-bold" href="/">☁ Cloud Log Analyzer</a>
+    <div>
+      {% if current_user %}
+        <span class="text-secondary me-3">👤 {{ current_user }}</span>
+        <a class="btn btn-sm btn-outline-secondary me-2" href="{{ url_for('about') }}">About</a>
+        <a class="btn btn-sm btn-outline-danger" href="{{ url_for('logout') }}">Logout</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+<div class="container py-5">
+  <div class="text-center mb-4">
+    <h1 class="fw-bold">Secure Cloud Log Analyzer</h1>
+    <p class="text-secondary">MapReduce-powered parallel log processing with Neon DB persistence</p>
+  </div>
+
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% for cat, msg in messages %}
+      <div class="alert alert-{{ cat }}">{{ msg }}</div>
+    {% endfor %}
+  {% endwith %}
+
+  <div class="row justify-content-center">
+    <div class="col-lg-7">
+      <div class="card shadow-sm mb-4">
+        <div class="card-header">📁 Upload Log File</div>
+        <div class="card-body">
+          <form method="POST" enctype="multipart/form-data">
+            <div class="mb-3">
+              <label class="form-label text-secondary">Select a log file (JSON, CSV, TXT, LOG)</label>
+              <input type="file" class="form-control" name="logfile" accept=".json,.csv,.log,.txt" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">⚡ Analyze with MapReduce</button>
+          </form>
+        </div>
+      </div>
+
+      {% if history %}
+      <div class="card">
+        <div class="card-header">📊 Recent Analyses (from Neon DB)</div>
+        <div class="card-body p-0">
+          <table class="table table-dark table-sm mb-0">
+            <thead><tr><th>File</th><th>Events</th><th>Risk</th><th>Timestamp</th></tr></thead>
+            <tbody>
+              {% for row in history %}
+              <tr>
+                <td>{{ row.filename }}</td>
+                <td>{{ row.total_events }}</td>
+                <td>
+                  <span class="badge {% if row.risk_score > 70 %}bg-danger{% elif row.risk_score > 40 %}bg-warning text-dark{% else %}bg-success{% endif %}">
+                    {{ row.risk_score }}
+                  </span>
+                </td>
+                <td class="small text-secondary">{{ row.created_at }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+</body>
+</html>

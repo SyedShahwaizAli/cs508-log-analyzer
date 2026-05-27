@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About - Secure Cloud Log Analyzer</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}" />
+</head>
+<body>
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary mb-4">
+    <div class="container">
+      <a class="navbar-brand" href="/">Secure Cloud Log Analyzer</a>
+    </div>
+  </nav>
+  <main class="container">
+    <div class="card shadow-sm p-4">
+      <h1>About this project</h1>
+      <p>This cloud log analyzer is designed to help students build a unique, hands-on CS-508 project with:</p>
+      <ul>
+        <li>Multi-cloud log parsing: AWS CloudTrail, Azure Activity, GCP Audit, plus generic text logs.</li>
+        <li>Suspicious event detection and risk scoring.</li>
+        <li>Web-based upload UI and summary dashboard.</li>
+        <li>Extensible Python structure so you can add new rules or deploy to containers.</li>
+      </ul>
+      <h4>Unique features you can customize</h4>
+      <ul>
+        <li>Add a real IP reputation list for stronger alerts.</li>
+        <li>Integrate a cloud API to fetch logs from S3 or Azure Blob Storage.</li>
+        <li>Extend analysis with anomaly detection using frequency or login patterns.</li>
+      </ul>
+      <p class="text-muted">Project author: CS-508 student. Teacher-facing note: includes custom parsing and cross-cloud security alert scoring.</p>
+    </div>
+  </main>
+</body>
+</html>
